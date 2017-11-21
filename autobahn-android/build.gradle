@@ -1,5 +1,5 @@
 apply plugin: 'com.android.library'
-apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'me.tatarka.retrolambda'
 
 android {
     compileSdkVersion 27
@@ -21,66 +21,12 @@ android {
     }
 }
 
-task sourcesJar(type: Jar) {
-    classifier = 'sources'
-    from android.sourceSets.main.java.srcDirs
-}
-
-task javadoc(type: Javadoc) {
-    source = android.sourceSets.main.java.srcDirs
-    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-}
-//project.archivesBaseName = 'autobahn-android-streamsupport'
-group = 'io.crossbar.autobahn'
-version = '17.11.17'
-
-def groupID = 'io.crossbar.autobahn'
-def gitUrl = 'https://github.com/crossbario/autobahn-java.git'
-def licenseName = 'MIT'
-def licenseUrl = 'https://opensource.org/licenses/MIT'
-def relVersion = '17.11.17'
-def siteUrl = 'https://github.com/crossbario/autobahn-java'
-
-install {
-    repositories.mavenInstaller {
-        // This generates POM.xml with proper parameters
-        pom {
-            project {
-                packaging 'aar'
-                groupId groupID
-                artifactId 'autobahn-android-streamsupport'
-
-                // Add your description here
-                name 'autobahn-android-streamsupport'
-                description 'WebSocket & WAMP for Android'
-                url siteUrl
-
-                // Set your license
-                licenses {
-                    license {
-                        name licenseName
-                        url licenseUrl
-                    }
-                }
-                developers {
-                    developer {
-                        id "crossbario"
-                        name "Crossbar.io"
-                        email "support@crossbario.com"
-                    }
-                }
-                scm {
-                    url siteUrl
-                }
-            }
-        }
-    }
-}
-
 dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
 
-    implementation project(":autobahn")
+    api project(":autobahn")
 }
+
+apply from: rootProject.file('gradle-mvn-push.gradle')

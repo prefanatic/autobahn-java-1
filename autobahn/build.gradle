@@ -1,8 +1,7 @@
 apply plugin: 'java-library'
-apply plugin: 'maven-publish'
+//apply plugin: 'maven-publish'
 apply plugin: 'com.jfrog.bintray'
 apply plugin: 'me.tatarka.retrolambda'
-
 
 def ARTIFACT_ANDROID = 'autobahn-android'
 def ARTIFACT_ANDROID_STREAMSUPPORT = 'autobahn-android-streamsupport'
@@ -56,6 +55,9 @@ bintray {
     }
 }
 
+//sourceCompatibility = JavaVersion.VERSION_1_8
+//targetCompatibility = JavaVersion.VERSION_1_8
+
 // Create the pom configuration:
 def pomConfig = {
     // Set your license
@@ -76,6 +78,7 @@ def pomConfig = {
         url siteUrl
     }
 }
+/*
 publishing {
     publications {
         mavenJava(MavenPublication) {
@@ -100,26 +103,17 @@ task sourcesJar(type: Jar, dependsOn: classes) {
     classifier = 'sources'
     from sourceSets.main.allSource
 }
-sourceSets {
-    main {
-        java {
-            exclude 'io/crossbar/autobahn/wamp/transports/AndroidWebSocket.java'
-            exclude 'io/crossbar/autobahn/websocket'
-            exclude 'io/crossbar/autobahn/utils/ABALogger.java'
-        }
-    }
-}
+
 jar {
     version = relVersion
 }
-sourceCompatibility = JavaVersion.VERSION_1_8
-targetCompatibility = JavaVersion.VERSION_1_8
+
 
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
     classifier = 'javadoc'
     from javadoc.destinationDir
-}
+}*/
 /*
 
 artifacts {
@@ -127,3 +121,5 @@ artifacts {
     archives javadocJar
 }
 */
+
+apply from: rootProject.file('gradle-mvn-push.gradle')
