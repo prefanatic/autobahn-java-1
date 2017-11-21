@@ -10,7 +10,8 @@ import okio.ByteString
 import java.util.concurrent.TimeUnit
 
 /**
- * Created by cgoldberg02 on 11/20/17.
+ * OkHttp Transport for Autobahn
+ * Provides an OkHttp-managed WebSocket
  */
 class OkHttpTransport(private val uri: String) : ITransport {
     private val LOGGER = ABLogger.getLogger(OkHttpTransport::class.java.name)
