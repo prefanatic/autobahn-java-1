@@ -18,14 +18,22 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
+
+import io.crossbar.autobahn.wamp.auth.TicketAuth;
+import io.crossbar.autobahn.wamp.interfaces.IAuthenticator;
+import io.crossbar.autobahn.wamp.messages.Authenticate;
+import io.crossbar.autobahn.wamp.messages.Challenge;
+import io.crossbar.autobahn.wamp.types.ChallengeResponse;
+import java8.util.concurrent.CompletableFuture;
+import java8.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.logging.Logger;
+
+import java8.util.function.BiConsumer;
+import java8.util.function.BiFunction;
+import java8.util.function.Consumer;
+import java8.util.function.Function;
+import java8.util.function.Supplier;
 
 import io.crossbar.autobahn.utils.ABLogger;
 import io.crossbar.autobahn.utils.IABLogger;
@@ -78,7 +86,7 @@ import io.crossbar.autobahn.wamp.utils.Platform;
 
 import static io.crossbar.autobahn.wamp.messages.MessageMap.MESSAGE_TYPE_MAP;
 import static io.crossbar.autobahn.wamp.utils.Shortcuts.getOrDefault;
-import static java.util.concurrent.CompletableFuture.runAsync;
+import static java8.util.concurrent.CompletableFuture.runAsync;
 
 
 public class Session implements ISession, ITransportHandler {
@@ -116,6 +124,9 @@ public class Session implements ISession, ITransportHandler {
     private long mSessionID;
     private boolean mGoodbyeSent;
     private String mRealm;
+
+    // FIXME: 11/17/17 This is bad.
+    public String signature;
 
     public Session() {
         mOnJoinListeners = new ArrayList<>();
@@ -205,7 +216,17 @@ public class Session implements ISession, ITransportHandler {
     }
 
     private void onPreSessionMessage(IMessage message) throws Exception {
-        if (message instanceof Welcome) {
+        if (message instanceof Challenge) {
+            Challenge msg = (Challenge) message;
+            // TODO: 11/17/17 Do we care what method they're asking for, when we asked first?
+            if (!msg.method.equals("ticket")) {
+                throw new RuntimeException("We only support ticket auth :)");
+            }
+
+            Authenticate authenticate = new Authenticate(signature, new HashMap<>());
+            runAsync(() -> send(authenticate), getExecutor());
+
+        } else if (message instanceof Welcome) {
             Welcome msg = (Welcome) message;
             mState = STATE_JOINED;
             mSessionID = msg.session;
@@ -1133,7 +1154,7 @@ public class Session implements ISession, ITransportHandler {
     }
 
     @Override
-    public CompletableFuture<SessionDetails> join(String realm, List<String> authMethods) {
+    public CompletableFuture<SessionDetails> join(String realm, List<IAuthenticator> authenticators) {
         LOGGER.d("Called join() with realm=" + realm);
         mRealm = realm;
         mGoodbyeSent = false;
@@ -1142,7 +1163,26 @@ public class Session implements ISession, ITransportHandler {
         roles.put("subscriber", new HashMap<>());
         roles.put("caller", new HashMap<>());
         roles.put("callee", new HashMap<>());
-        send(new Hello(realm, roles));
+
+        // FIXME: 11/17/17 LOL!
+        if (authenticators != null && !authenticators.isEmpty()) {
+            IAuthenticator authenticator = authenticators.get(0);
+            if (authenticator instanceof TicketAuth) {
+                LOGGER.d("Hello darkness, my old friend.");
+                TicketAuth ticketAuth = (TicketAuth) authenticator;
+
+                List<String> authMethods = new ArrayList<>();
+                authMethods.add("ticket");
+
+                send(new Hello(realm, authMethods, ticketAuth.authid, roles));
+            } else {
+                LOGGER.d("Joining w/o auth.");
+                send(new Hello(realm, roles));
+            }
+        } else {
+            LOGGER.d("Joining w/o auth.");
+            send(new Hello(realm, roles));
+        }
         mJoinFuture = new CompletableFuture<>();
         mState = STATE_HELLO_SENT;
         return mJoinFuture;

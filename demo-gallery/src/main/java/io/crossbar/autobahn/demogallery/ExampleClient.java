@@ -13,7 +13,7 @@ package io.crossbar.autobahn.demogallery;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
+import java8.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -45,7 +45,7 @@ public class ExampleClient {
         session.addOnDisconnectListener(this::onDisconnectCallback);
 
         // finally, provide everything to a Client instance and connect
-        Client client = new Client(session, websocketURL, realm);
+        Client client = new Cliesnt(session, websocketURL, realm);
         return client.connect();
     }
 
